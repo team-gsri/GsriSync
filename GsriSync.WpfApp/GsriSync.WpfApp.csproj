@@ -1,0 +1,47 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <StartupObject>GsriSync.WpfApp.App</StartupObject>
+    <AssemblyName>GsriSync</AssemblyName>
+    <SignAssembly>false</SignAssembly>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Views\Icons\analyze.agif" />
+    <None Remove="Views\Icons\analyze.gif" />
+    <None Remove="Views\Icons\back.png" />
+    <None Remove="Views\Icons\download.png" />
+    <None Remove="Views\Icons\installing.gif" />
+    <None Remove="Views\Icons\outline_build_white_48dp.png" />
+    <None Remove="Views\Icons\outline_cached_white_48dp.png" />
+    <None Remove="Views\Icons\outline_videogame_asset_white_48dp.png" />
+    <None Remove="Views\Icons\play.png" />
+    <None Remove="Views\Icons\uninstall.png" />
+    <None Remove="Views\Icons\wrench.png" />
+    <None Remove="Views\Images\logo.png" />
+    <None Remove="Views\Images\wallpaper.jpg" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommonServiceLocator" Version="2.0.5" />
+    <PackageReference Include="Microsoft.Win32.Registry" Version="4.7.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="WpfAnimatedGif" Version="2.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Views\Icons\analyze.gif" />
+    <Resource Include="Views\Icons\back.png" />
+    <Resource Include="Views\Icons\download.png" />
+    <Resource Include="Views\Icons\installing.gif" />
+    <Resource Include="Views\Icons\play.png" />
+    <Resource Include="Views\Icons\uninstall.png" />
+    <Resource Include="Views\Icons\wrench.png" />
+    <Resource Include="Views\Images\logo.png" />
+    <Resource Include="Views\Images\wallpaper.jpg" />
+  </ItemGroup>
+
+</Project>
