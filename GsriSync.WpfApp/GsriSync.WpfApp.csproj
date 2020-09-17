@@ -15,6 +15,7 @@
     <None Remove="Views\Icons\back.png" />
     <None Remove="Views\Icons\download.png" />
     <None Remove="Views\Icons\installing.gif" />
+    <None Remove="Views\Icons\mic.png" />
     <None Remove="Views\Icons\outline_build_white_48dp.png" />
     <None Remove="Views\Icons\outline_cached_white_48dp.png" />
     <None Remove="Views\Icons\outline_videogame_asset_white_48dp.png" />
@@ -37,6 +38,7 @@
     <Resource Include="Views\Icons\back.png" />
     <Resource Include="Views\Icons\download.png" />
     <Resource Include="Views\Icons\installing.gif" />
+    <Resource Include="Views\Icons\mic.png" />
     <Resource Include="Views\Icons\play.png" />
     <Resource Include="Views\Icons\uninstall.png" />
     <Resource Include="Views\Icons\wrench.png" />

@@ -5,7 +5,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d"
              d:DesignHeight="450" d:DesignWidth="800">
-    <UniformGrid Columns="2">
+    <UniformGrid Columns="3">
         <Button Margin="20" Command="{Binding UninstallCommand}" Style="{StaticResource Square}">
             <Button.Background>
                 <SolidColorBrush Color="Coral" Opacity=".7" />
@@ -13,6 +13,12 @@
             <StackPanel>
                 <Image Source="Icons/uninstall.png" Width="75" />
                 <Label HorizontalAlignment="Center">Désinstaller le modpack</Label>
+            </StackPanel>
+        </Button>
+        <Button Margin="20" Command="{Binding VocalCommand}" Style="{StaticResource Square}">
+            <StackPanel>
+                <Image Source="Icons/mic.png" Width="75" />
+                <Label HorizontalAlignment="Center">Connexion vocale</Label>
             </StackPanel>
         </Button>
         <Button Margin="20" Command="{Binding LaunchCommand}" Style="{StaticResource Square}">

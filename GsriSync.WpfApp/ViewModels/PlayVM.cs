@@ -18,6 +18,8 @@ namespace GsriSync.WpfApp.ViewModels
 
         public ICommand UninstallCommand => new DelegateAsyncCommand(UninstallAsync);
 
+        public ICommand VocalCommand => new DelegateAsyncCommand(VocalAsync);
+
         public PlayVM(MainWindowsVM parent)
         {
             _parent = parent;
@@ -33,6 +35,12 @@ namespace GsriSync.WpfApp.ViewModels
         {
             await _sync.RemoveAsync();
             _parent.NavigateToVerify();
+        }
+
+        private async Task VocalAsync(object arg)
+        {
+            var manifest = await _manifest.ReadLocalManifestAsync();
+            manifest.ConnectVocal();
         }
     }
 }

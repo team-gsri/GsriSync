@@ -44,10 +44,14 @@ namespace GsriSync.WpfApp.Models
         public void Launch()
         {
             var mods = string.Join(";", Server.Addons.Select(name => Addons.First(addon => addon.Name == name).LocalExpandPath));
-            var args = $"-connect={Server.Hostname} -port={Server.Port} -mod={mods}";
+            var args = $"-connect={Server.Hostname} -port={Server.Port} \"-mod={mods}\" {_registry.CustomCliArgs}";
             var exe = $@"{_registry.Arma3Path}\arma3_x64.exe";
-            Process.Start(new ProcessStartInfo(Server.TeamspeakUrl) { UseShellExecute = true, Verb = "open" });
             Process.Start(exe, args);
+        }
+
+        internal void ConnectVocal()
+        {
+            Process.Start(new ProcessStartInfo(Server.TeamspeakUrl) { UseShellExecute = true, Verb = "open" });
         }
 
         private void InstallProgressChangedHandler(object sender, InstallProgressChangedEventArgs e)
