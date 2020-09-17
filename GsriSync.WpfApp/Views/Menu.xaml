@@ -7,10 +7,8 @@
              xmlns:local="clr-namespace:GsriSync.WpfApp.Views"
              mc:Ignorable="d"
              d:DesignHeight="450" d:DesignWidth="800">
-    <DockPanel>
-        <Image Source="Images/logo.png" Width="150" DockPanel.Dock="Bottom" Margin="20" />
-        <StackPanel Orientation="Vertical">
-            <UniformGrid Columns="1" Margin="20" HorizontalAlignment="Left">
+    <StackPanel Orientation="Vertical">
+        <UniformGrid Columns="1" Margin="20" HorizontalAlignment="Left">
             <Label HorizontalAlignment="Center" FontSize="20" FontFamily="Armata">GSRI</Label>
             <Button Style="{StaticResource Menu}" HorizontalContentAlignment="Left" Command="{Binding NavigateConfigurationCommand}">
                 <StackPanel Orientation="Horizontal">
@@ -54,6 +52,5 @@
                 </StackPanel>
             </Button>
         </UniformGrid>
-        </StackPanel>
-    </DockPanel>
+    </StackPanel>
 </UserControl>

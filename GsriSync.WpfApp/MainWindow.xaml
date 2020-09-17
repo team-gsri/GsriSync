@@ -6,12 +6,17 @@
         xmlns:views="clr-namespace:GsriSync.WpfApp.Views"
         mc:Ignorable="d"
         WindowState="Maximized"
-        Title="Groupe Spécial de Reconnaisance et d'Intervention" Height="600" Width="900">
+        WindowStyle="None"
+        Title="Groupe Spécial de Reconnaisance et d'Intervention"
+        Height="600"
+        Width="900">
     <DockPanel>
         <DockPanel.Background>
-            <ImageBrush ImageSource="Views/Images/wallpaper.jpg" Stretch="UniformToFill" />            
+            <ImageBrush ImageSource="Views/Images/wallpaper.jpg" Stretch="UniformToFill" />
         </DockPanel.Background>
+        <views:Title DockPanel.Dock="Top" />
+        <views:Branding DockPanel.Dock="Bottom" />
         <views:Menu DockPanel.Dock="Left" x:Name="menu" />
-        <ContentControl Content="{Binding CurrentPage}" />        
+        <ContentControl Content="{Binding CurrentPage}" />
     </DockPanel>
 </Window>
