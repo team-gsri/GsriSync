@@ -15,6 +15,12 @@ namespace GsriSync.WpfApp.Services
             set => this[nameof(CurrentPath)] = value;
         }
 
+        public string CustomCliArgs
+        {
+            get => this[nameof(CustomCliArgs)] ?? "";
+            set => this[nameof(CustomCliArgs)] = value;
+        }
+
         public string ManifestUrl
         {
             get => this[nameof(ManifestUrl)] ?? @"https://mods.gsri.team/manifest.json";

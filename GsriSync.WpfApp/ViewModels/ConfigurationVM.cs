@@ -17,6 +17,12 @@ namespace GsriSync.WpfApp.ViewModels
             set => _registry.CurrentPath = value;
         }
 
+        public string CustomCliArgs
+        {
+            get => _registry.CustomCliArgs;
+            set => _registry.CustomCliArgs = value;
+        }
+
         public string ManifestUrl
         {
             get => _registry.ManifestUrl;
