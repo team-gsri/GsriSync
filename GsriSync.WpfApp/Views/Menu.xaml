@@ -12,7 +12,7 @@
             <Label HorizontalAlignment="Center" FontSize="20" FontFamily="Armata">GSRI</Label>
             <Button Style="{StaticResource Menu}" HorizontalContentAlignment="Left" Command="{Binding NavigateConfigurationCommand}">
                 <StackPanel Orientation="Horizontal">
-                    <Image Source="Icons/wrench.png"  Height="30" />
+                    <Label FontFamily="Segoe MDL2 Assets">&#xE115;</Label>
                     <Label>Paramètres</Label>
                 </StackPanel>
             </Button>
