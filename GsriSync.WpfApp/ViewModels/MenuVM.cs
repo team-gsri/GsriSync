@@ -1,17 +1,23 @@
-﻿using GsriSync.WpfApp.Utils;
+﻿using GsriSync.WpfApp.Services;
+using GsriSync.WpfApp.Utils;
 using System.Windows.Input;
 
 namespace GsriSync.WpfApp.ViewModels
 {
     internal class MenuVM
     {
-        private readonly MainWindowsVM _parent;
+        private readonly NavigationService _navigation;
 
-        public ICommand NavigateConfigurationCommand => new DelegateCommand(parameter => _parent.NavigateToConfiguration());
+        public ICommand NavigateConfigurationCommand => new DelegateCommand(NavigateAction);
 
-        public MenuVM(MainWindowsVM parent)
+        public MenuVM(NavigationService navigation)
         {
-            this._parent = parent;
+            this._navigation = navigation;
+        }
+
+        private void NavigateAction(object parameter)
+        {
+            _navigation.NavigateTo(NavigationService.Pages.Config);
         }
     }
 }

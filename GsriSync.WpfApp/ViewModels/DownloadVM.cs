@@ -1,6 +1,8 @@
 ﻿using GsriSync.WpfApp.Events;
 using GsriSync.WpfApp.Services;
 using GsriSync.WpfApp.Utils;
+using System;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -8,9 +10,9 @@ namespace GsriSync.WpfApp.ViewModels
 {
     internal class DownloadVM : NotifyPropertyChangedBase
     {
-        private readonly MainWindowsVM _parent;
+        private readonly ManifestService _manifest;
 
-        private readonly SynchronizeService _sync = new SynchronizeService();
+        private readonly NavigationService _navigation;
 
         private Task running;
 
@@ -20,16 +22,21 @@ namespace GsriSync.WpfApp.ViewModels
 
         public int Progress { get; set; }
 
-        public DownloadVM(MainWindowsVM parent)
+        public DownloadVM(
+            NavigationService navigation,
+            ManifestService manifest)
         {
-            _parent = parent;
-            _sync.InstallProgressChanged += OnDownloadProgress;
+            _navigation = navigation ?? throw new ArgumentNullException(nameof(navigation));
+            _manifest = manifest ?? throw new ArgumentNullException(nameof(manifest));
         }
 
         public async Task InstallAsync()
         {
-            await _sync.DownloadAsync();
-            _parent.NavigateToPlay();
+            var manifest = await _manifest.RemoteManifest;
+            manifest.InstallProgressChanged += OnDownloadProgress;
+            await manifest.InstallAsync();
+            await _manifest.DownloadRemoteManifestAsync();
+            _navigation.NavigateTo(NavigationService.Pages.Play);
             running = null;
         }
 

@@ -1,19 +1,17 @@
 ﻿using GsriSync.WpfApp.Events;
-using GsriSync.WpfApp.Services;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Windows.Storage;
 
 namespace GsriSync.WpfApp.Models
 {
     internal class Manifest : INotifyInstallProgressChanged
     {
-        private readonly RegistryService _registry = new RegistryService();
-
         public IEnumerable<Addon> Addons { get; set; } = new Addon[0];
+
+        public bool IsInstalled => LastModification != default;
 
         public DateTimeOffset LastModification { get; set; }
 
@@ -23,38 +21,29 @@ namespace GsriSync.WpfApp.Models
 
         public event InstallProgressChangedEventHandler InstallProgressChanged;
 
-        public void Delete()
+        public async Task InstallAsync()
         {
-            Directory.Delete(_registry.CurrentPath, true);
+            foreach (var addon in Addons.OfType<Expandable>().Append(Teamspeak))
+            {
+                addon.InstallProgressChanged += OnAddonInstallProgress;
+                await addon.InstallAsync();
+            }
         }
 
-        public async Task InstallAsync()
+        public async Task UninstallAsync()
         {
             foreach (var addon in Addons)
             {
-                addon.InstallProgressChanged += InstallProgressChangedHandler;
-                await addon.InstallAsync();
-                addon.InstallProgressChanged -= InstallProgressChangedHandler;
+                await addon.UninstallAsync();
             }
-            Teamspeak.InstallProgressChanged += InstallProgressChangedHandler;
-            await Teamspeak.InstallAsync();
-            Teamspeak.InstallProgressChanged -= InstallProgressChangedHandler;
+
+            if (!IsInstalled) { return; }
+
+            var manifest = await ApplicationData.Current.LocalCacheFolder.GetFileAsync("manifest.json");
+            await manifest.DeleteAsync();
         }
 
-        public void Launch()
-        {
-            var mods = string.Join(";", Server.Addons.Select(name => Addons.First(addon => addon.Name == name).LocalExpandPath));
-            var args = $"-connect={Server.Hostname} -port={Server.Port} \"-mod={mods}\" {_registry.CustomCliArgs}";
-            var exe = $@"{_registry.Arma3Path}\arma3_x64.exe";
-            Process.Start(exe, args);
-        }
-
-        internal void ConnectVocal()
-        {
-            Process.Start(new ProcessStartInfo(Server.TeamspeakUrl) { UseShellExecute = true, Verb = "open" });
-        }
-
-        private void InstallProgressChangedHandler(object sender, InstallProgressChangedEventArgs e)
+        private void OnAddonInstallProgress(object sender, InstallProgressChangedEventArgs e)
         {
             InstallProgressChanged?.Invoke(this, e);
         }

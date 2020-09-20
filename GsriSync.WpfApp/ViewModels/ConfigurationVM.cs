@@ -7,39 +7,42 @@ namespace GsriSync.WpfApp.ViewModels
 {
     internal class ConfigurationVM : NotifyPropertyChangedBase
     {
-        private readonly MainWindowsVM _parent;
+        private readonly NavigationService _navigation;
 
-        private readonly RegistryService _registry = new RegistryService();
-
-        public string CurrentPath
-        {
-            get => _registry.CurrentPath;
-            set => _registry.CurrentPath = value;
-        }
+        private readonly SettingsService _settings;
 
         public string CustomCliArgs
         {
-            get => _registry.CustomCliArgs;
-            set => _registry.CustomCliArgs = value;
+            get => _settings.CustomCliArgs;
+            set => _settings.CustomCliArgs = value;
+        }
+
+        public string LocalDataPath
+        {
+            get => _settings.LocalDataPath;
+            set => _settings.LocalDataPath = value;
         }
 
         public string ManifestUrl
         {
-            get => _registry.ManifestUrl;
-            set => _registry.ManifestUrl = value;
+            get => _settings.ManifestUrl;
+            set => _settings.ManifestUrl = value;
         }
 
-        public ICommand NavigateBackCommand => new DelegateCommand(parameter => _parent.NavigateToVerify());
+        public ICommand NavigateBackCommand => new DelegateCommand(parameter => _navigation.NavigateBack());
 
         public bool StartWithConfig
         {
-            get => string.Equals(_registry.StartWithConfig ?? "true", "true", StringComparison.InvariantCultureIgnoreCase);
-            set => _registry.StartWithConfig = value ? "true" : "false";
+            get => string.Equals(_settings.StartWithConfig ?? "true", "true", StringComparison.InvariantCultureIgnoreCase);
+            set => _settings.StartWithConfig = value ? "true" : "false";
         }
 
-        public ConfigurationVM(MainWindowsVM parent)
+        public ConfigurationVM(
+            NavigationService navigation,
+            SettingsService settings)
         {
-            this._parent = parent;
+            _navigation = navigation ?? throw new ArgumentNullException(nameof(navigation));
+            _settings = settings ?? throw new ArgumentNullException(nameof(settings));
         }
     }
 }

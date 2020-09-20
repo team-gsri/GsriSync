@@ -1,10 +1,9 @@
 ﻿using GsriSync.WpfApp.Events;
-using System.IO;
-using System.IO.Compression;
-using System.Linq;
+using GsriSync.WpfApp.Services;
+using System;
 using System.Net;
-using System.Threading;
 using System.Threading.Tasks;
+using Windows.Storage;
 
 namespace GsriSync.WpfApp.Models
 {
@@ -14,76 +13,61 @@ namespace GsriSync.WpfApp.Models
 
         public const string STAGE_EXPAND = "Unzip";
 
-        public abstract string LocalExpandPath { get; }
-
         public string Name { get; set; }
 
         public string RemoteUrl { get; set; }
 
-        protected abstract string LocalDownloadPath { get; }
+        protected virtual string Archive => $"{Name}.zip";
 
-        private string LocalArchiveFilename => $@"{Name}.zip";
-
-        private string LocalArchivePath => $@"{LocalDownloadPath}\{LocalArchiveFilename}";
+        protected virtual string ExpandPath => $"{Name}";
 
         public event InstallProgressChangedEventHandler InstallProgressChanged;
-
-        public virtual void Delete()
-        {
-            if (!Directory.Exists(LocalExpandPath)) return;
-            Directory.Delete(LocalExpandPath, true);
-        }
 
         public virtual async Task InstallAsync()
         {
             await DownloadAsync();
             await ExpandAsync();
-            File.Delete(LocalArchivePath);
+            var archive = await ApplicationData.Current.TemporaryFolder.GetFileAsync(Archive);
+            await archive.DeleteAsync();
+        }
+
+        public virtual async Task UninstallAsync()
+        {
+            var directory = await GetOrMakeExpandFolderAsync(ExpandPath);
+            await directory.DeleteAsync();
+        }
+
+        protected async virtual Task<StorageFolder> GetOrMakeExpandFolderAsync(string expandPath)
+        {
+            return await ApplicationData.Current.LocalCacheFolder.CreateFolderAsync($"{Name}", CreationCollisionOption.ReplaceExisting);
         }
 
         private async Task DownloadAsync()
         {
-            InstallProgressChanged?.Invoke(this, new InstallProgressChangedEventArgs(LocalArchiveFilename, STAGE_DOWNLOAD, 0));
-            MakeDirectoryIfNotExists(LocalDownloadPath);
+            NotifyInstallProgressChanged(STAGE_DOWNLOAD, 0);
             using (var client = new WebClient())
             {
-                client.DownloadProgressChanged += this.DownloadProgressChanged;
-                await client.DownloadFileTaskAsync(this.RemoteUrl, LocalArchivePath);
+                client.DownloadProgressChanged += (sender, e) => NotifyInstallProgressChanged(STAGE_DOWNLOAD, e.ProgressPercentage);
+                var archive = await ApplicationData.Current.TemporaryFolder.CreateFileAsync(Archive, CreationCollisionOption.ReplaceExisting);
+                await client.DownloadFileTaskAsync(this.RemoteUrl, archive.Path);
             }
-        }
-
-        private void DownloadProgressChanged(object sender, DownloadProgressChangedEventArgs e)
-        {
-            var filename = Path.GetFileName(LocalArchivePath);
-            var arguments = new InstallProgressChangedEventArgs(filename, STAGE_DOWNLOAD, e.ProgressPercentage);
-            InstallProgressChanged?.Invoke(this, arguments);
         }
 
         private async Task ExpandAsync()
         {
-            long current = 0;
-            InstallProgressChanged?.Invoke(this, new InstallProgressChangedEventArgs(LocalArchiveFilename, STAGE_EXPAND, 0));
-            MakeDirectoryIfNotExists(LocalExpandPath);
-            using (var archive = ZipFile.OpenRead(LocalArchivePath))
+            NotifyInstallProgressChanged(STAGE_EXPAND, 0);
+            using (var client = new ZipClient())
             {
-                var total = archive.Entries.Sum(entry => entry.CompressedLength);
-                foreach (var entry in archive.Entries)
-                {
-                    current += entry.CompressedLength;
-                    if (string.Empty.Equals(entry.Name)) { continue; }
-                    var file_path = $@"{LocalExpandPath}\{entry.FullName}";
-                    MakeDirectoryIfNotExists(Path.GetDirectoryName(file_path));
-                    await Task.Factory.StartNew(() => entry.ExtractToFile(file_path, true));
-                    var progress = 100 * current / total;
-                    InstallProgressChanged?.Invoke(this, new InstallProgressChangedEventArgs(LocalArchiveFilename, STAGE_EXPAND, (int)progress));
-                }
+                client.UnzipProgressChanged += (sender, e) => NotifyInstallProgressChanged(STAGE_EXPAND, e.ProgressPercentage);
+                var archive = await ApplicationData.Current.TemporaryFolder.GetFileAsync(Archive);
+                var expand = await GetOrMakeExpandFolderAsync(ExpandPath);
+                await client.UnzipArchiveTaskAsync(archive.Path, expand.Path);
             }
         }
 
-        private void MakeDirectoryIfNotExists(string directory)
+        private void NotifyInstallProgressChanged(string stage, int progress)
         {
-            if (Directory.Exists(directory)) return;
-            Directory.CreateDirectory(directory);
+            InstallProgressChanged?.Invoke(this, new InstallProgressChangedEventArgs(Name, stage, progress));
         }
     }
 }

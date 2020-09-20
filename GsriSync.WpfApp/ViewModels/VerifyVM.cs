@@ -1,5 +1,6 @@
 ﻿using GsriSync.WpfApp.Services;
 using GsriSync.WpfApp.Utils;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -7,27 +8,56 @@ namespace GsriSync.WpfApp.ViewModels
 {
     internal class VerifyVM : NotifyPropertyChangedBase
     {
-        private readonly MainWindowsVM _parent;
+        private readonly ManifestService _manifest;
 
-        private readonly SynchronizeService _sync = new SynchronizeService();
+        private readonly NavigationService _navigation;
+
+        private readonly RegistryService _registry;
 
         private Task running;
 
-        public VerifyVM(MainWindowsVM parent)
+        public string Message { get; set; }
+
+        public VerifyVM(
+            NavigationService navigation,
+            ManifestService manifest,
+            RegistryService registry)
         {
-            _parent = parent;
+            _navigation = navigation ?? throw new ArgumentNullException(nameof(navigation));
+            _manifest = manifest ?? throw new ArgumentNullException(nameof(manifest));
+            _registry = registry ?? throw new ArgumentNullException(nameof(registry));
         }
 
         public async Task VerifyAsync()
         {
-            var isSync = await _sync.IsSynchronizedAsync();
-            _parent.NavigateToPostVerify(isSync);
-            running = null;
+            VerifyThirdParty();
+            try
+            {
+                var local = await _manifest.LocalManifest;
+                var remote = await _manifest.RemoteManifest;
+                var isSync = Equals(local?.LastModification, remote?.LastModification);
+                _navigation.NavigateAfterVerify(isSync);
+            }
+            catch (Exception)
+            {
+                _navigation.NavigateAfterVerify(false);
+            }
+            finally
+            {
+                running = null;
+            }
         }
 
         internal void ScheduleVerify()
         {
             running = running ?? Task.Factory.StartNew(VerifyAsync, CancellationToken.None, TaskCreationOptions.None, TaskScheduler.FromCurrentSynchronizationContext());
+        }
+
+        private void VerifyThirdParty()
+        {
+            if (string.IsNullOrEmpty(_registry.SteamPath)) { Message = "Steam n'est pas installé"; NotifyPropertyChanged(nameof(Message)); throw new InvalidOperationException(); }
+            if (string.IsNullOrEmpty(_registry.Arma3Path)) { Message = "Arma 3 n'est pas installé"; NotifyPropertyChanged(nameof(Message)); throw new InvalidOperationException(); }
+            if (string.IsNullOrEmpty(_registry.TeamspeakPath)) { Message = "Teamspeak n'est pas installé"; NotifyPropertyChanged(nameof(Message)); throw new InvalidOperationException(); }
         }
     }
 }

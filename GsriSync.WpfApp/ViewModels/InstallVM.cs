@@ -1,5 +1,6 @@
 ﻿using GsriSync.WpfApp.Services;
 using GsriSync.WpfApp.Utils;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -9,43 +10,49 @@ namespace GsriSync.WpfApp.ViewModels
 {
     internal class InstallVM : NotifyPropertyChangedBase
     {
-        private readonly MainWindowsVM _parent;
+        private readonly ManifestService _manifest;
 
-        private readonly SynchronizeService _sync = new SynchronizeService();
+        private readonly NavigationService _navigation;
+
+        private Task running;
 
         public ICommand InstallCommand => new DelegateCommand(InstallAction);
 
         public ICommand UninstallCommand => new DelegateAsyncCommand(UninstallAsync);
 
         public Visibility UninstallVisibility { get; set; } = Visibility.Hidden;
-        private Task running;
-        public InstallVM(MainWindowsVM parent)
+
+        public InstallVM(
+            NavigationService navigation,
+            ManifestService manifest)
         {
-            _parent = parent;
+            _navigation = navigation ?? throw new ArgumentNullException(nameof(navigation));
+            _manifest = manifest ?? throw new ArgumentNullException(nameof(manifest));
             ScheduleVerify();
+        }
+
+        internal void ScheduleVerify()
+        {
+            running = running ?? Task.Factory.StartNew(VerifyIsInstalledAsync, CancellationToken.None, TaskCreationOptions.None, TaskScheduler.FromCurrentSynchronizationContext());
         }
 
         private void InstallAction(object obj)
         {
-            _parent.NavigateToDownload();
+            _navigation.NavigateTo(NavigationService.Pages.Download);
         }
 
         private async Task UninstallAsync(object parameter)
         {
-            await _sync.RemoveAsync();
+            await _manifest.UninstallAsync();
             UninstallVisibility = Visibility.Hidden;
             NotifyPropertyChanged(nameof(UninstallVisibility));
         }
 
         private async Task VerifyIsInstalledAsync()
         {
-            UninstallVisibility = await _sync.IsInstalledAsync() ? Visibility.Visible : Visibility.Hidden;
+            var manifest = await _manifest.LocalManifest;
+            UninstallVisibility = manifest?.IsInstalled ?? false ? Visibility.Visible : Visibility.Hidden;
             NotifyPropertyChanged(nameof(UninstallVisibility));
-        }
-
-        internal void ScheduleVerify()
-        {
-            running = running ?? Task.Factory.StartNew(VerifyIsInstalledAsync, CancellationToken.None, TaskCreationOptions.None, TaskScheduler.FromCurrentSynchronizationContext());
         }
     }
 }

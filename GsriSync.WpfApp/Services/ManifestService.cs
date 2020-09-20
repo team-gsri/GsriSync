@@ -1,39 +1,71 @@
 ﻿using GsriSync.WpfApp.Models;
-using Newtonsoft.Json;
+using GsriSync.WpfApp.Utils;
+using System;
 using System.IO;
 using System.Net;
+using System.Net.Http;
+using System.Text.Json;
 using System.Threading.Tasks;
+using Windows.Storage;
 
 namespace GsriSync.WpfApp.Services
 {
     internal class ManifestService
     {
-        private readonly RegistryService _registry = new RegistryService();
+        private readonly HttpClient _http;
 
-        private string LocalManifestPath => $@"{_registry.CurrentPath}\manifest.json";
+        private readonly SettingsService _settings;
+
+        public AsyncLazy<Manifest> LocalManifest { get; private set; }
+
+        public AsyncLazy<Manifest> RemoteManifest { get; }
+
+        public ManifestService(
+            HttpClient http,
+            SettingsService settings)
+        {
+            _http = http;
+            _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+            LocalManifest = new AsyncLazy<Manifest>(ReadLocalManifestAsync);
+            RemoteManifest = new AsyncLazy<Manifest>(ReadRemoteManifestAsync);
+        }
 
         public async Task DownloadRemoteManifestAsync()
         {
             using (var client = new WebClient())
             {
-                await client.DownloadFileTaskAsync(_registry.ManifestUrl, LocalManifestPath);
+                var file = await ApplicationData.Current.LocalCacheFolder.CreateFileAsync("manifest.json", CreationCollisionOption.ReplaceExisting);
+                await client.DownloadFileTaskAsync(_settings.ManifestUrl, file.Path);
             }
+            LocalManifest = new AsyncLazy<Manifest>(ReadLocalManifestAsync);
         }
 
-        public async Task<Manifest> ReadLocalManifestAsync()
+        public async Task UninstallAsync()
         {
-            if (!File.Exists(LocalManifestPath)) { return new Manifest(); }
-            return JsonConvert.DeserializeObject<Manifest>(
-                await File.ReadAllTextAsync(LocalManifestPath));
+            var manifest = await LocalManifest;
+            if (!manifest.IsInstalled) { return; }
+            await manifest.UninstallAsync();
+            LocalManifest = new AsyncLazy<Manifest>(ReadLocalManifestAsync);
         }
 
-        public async Task<Manifest> ReadRemoteManifestAsync()
+        private async Task<Manifest> ReadLocalManifestAsync()
         {
-            using (var client = new WebClient())
+            try
             {
-                return JsonConvert.DeserializeObject<Manifest>(
-                    await client.DownloadStringTaskAsync(_registry.ManifestUrl));
+                var file = await ApplicationData.Current.LocalCacheFolder.GetFileAsync("manifest.json");
+                var stream = await file.OpenStreamForReadAsync();
+                return await JsonSerializer.DeserializeAsync<Manifest>(stream);
             }
+            catch (FileNotFoundException)
+            {
+                return default;
+            }
+        }
+
+        private async Task<Manifest> ReadRemoteManifestAsync()
+        {
+            var stream = await _http.GetStreamAsync(_settings.ManifestUrl);
+            return await JsonSerializer.DeserializeAsync<Manifest>(stream);
         }
     }
 }

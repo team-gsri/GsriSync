@@ -1,48 +1,60 @@
-﻿using GsriSync.WpfApp.Utils;
+﻿using GsriSync.WpfApp.Services;
+using GsriSync.WpfApp.Utils;
 using System;
+using System.Collections.Generic;
 
 namespace GsriSync.WpfApp.ViewModels
 {
     internal class MainWindowsVM : NotifyPropertyChangedBase
     {
+        private readonly ConfigurationVM _configuration;
+
+        private readonly DownloadVM _download;
+
+        private readonly InstallVM _install;
+
+        private readonly Dictionary<NavigationService.Pages, Func<MainWindowsVM, object>> _map = new Dictionary<NavigationService.Pages, Func<MainWindowsVM, object>>
+        {
+            { NavigationService.Pages.Config, vm => vm._configuration },
+            { NavigationService.Pages.Download, vm => vm._download },
+            { NavigationService.Pages.Install, vm => vm._install },
+            { NavigationService.Pages.Play, vm => vm._play },
+            { NavigationService.Pages.Verify, vm => vm._verify },
+        };
+
+        private readonly NavigationService _navigation;
+
+        private readonly PlayVM _play;
+
+        private readonly VerifyVM _verify;
+
         public object CurrentPage { get; set; }
 
-        private ConfigurationVM ConfigurationVM { get; }
+        public MenuVM Menu { get; }
 
-        private DownloadVM DownloadVM { get; }
-
-        private InstallVM InstallVM { get; }
-
-        private PlayVM PlayVM { get; }
-
-        private VerifyVM VerifyVM { get; }
-
-        public MainWindowsVM()
+        public MainWindowsVM(
+            NavigationService navigation,
+            ConfigurationVM configuration,
+            DownloadVM download,
+            InstallVM install,
+            PlayVM play,
+            VerifyVM verify,
+            MenuVM menu)
         {
-            ConfigurationVM = new ConfigurationVM(this);
-            DownloadVM = new DownloadVM(this);
-            InstallVM = new InstallVM(this);
-            PlayVM = new PlayVM(this);
-            VerifyVM = new VerifyVM(this);
-            NavigateToVerify();
+            _navigation = navigation ?? throw new ArgumentNullException(nameof(navigation));
+            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+            _download = download ?? throw new ArgumentNullException(nameof(download));
+            _install = install ?? throw new ArgumentNullException(nameof(install));
+            _play = play ?? throw new ArgumentNullException(nameof(play));
+            _verify = verify ?? throw new ArgumentNullException(nameof(verify));
+            _navigation.NavigationChanged += OnNavigationChanged;
+            Menu = menu ?? throw new ArgumentNullException(nameof(menu));
+            CurrentPage = _verify;
         }
 
-        public void NavigateToConfiguration() => NavigateTo(ConfigurationVM);
-
-        public void NavigateToInstall() => NavigateTo(InstallVM);
-
-        public void NavigateToPlay() => NavigateTo(PlayVM);
-
-        public void NavigateToPostVerify(bool isSync) => NavigateTo(isSync ? PlayVM as object : InstallVM);
-
-        public void NavigateToVerify() => NavigateTo(VerifyVM);
-
-        internal void NavigateToDownload() => NavigateTo(DownloadVM);
-
-        private void NavigateTo(object page)
+        private void OnNavigationChanged(object sender, NavigationService.NavigationChangedEventArgs e)
         {
-            if (CurrentPage == page) return;
-            CurrentPage = page;
+            CurrentPage = _map[e.NewPage](this);
             NotifyPropertyChanged(nameof(CurrentPage));
         }
     }

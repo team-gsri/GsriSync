@@ -11,6 +11,7 @@
             <Image gif:ImageBehavior.AnimatedSource="Icons/analyze.gif" Width="75" DockPanel.Dock="top" Margin="20" />
             <Label HorizontalContentAlignment="Center">Merci de patienter, nous  validons votre installation ...</Label>
             <ProgressBar IsIndeterminate="True" Margin="20" />
+            <Label Content="{Binding Message}" Foreground="Red" d:Content="Steam est kaput" HorizontalAlignment="Center" FontSize="24pt" />
         </StackPanel>
     </DockPanel>
 </UserControl>

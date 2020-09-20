@@ -27,16 +27,9 @@
                 <RowDefinition Height="*" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
-            <Label Grid.Row="0" Content="Afficher cette page au démarrage" />
-            <Label Grid.Row="1" Content="Chemin de stockage des mods" />
             <Label Grid.Row="2" Content="Adresse du manifeste" />
             <Label Grid.Row="3" Content="Paramètres personnalisés" />
-            <CheckBox Grid.Row="0" Grid.Column="1" IsChecked="{Binding StartWithConfig}" />
-            <DockPanel Grid.Row="1" Grid.Column="1">
-                <Button Grid.Row="1" Grid.Column="2" Content="Choisir ..." DockPanel.Dock="Right" Margin="5" />
-                <TextBox Text="{Binding CurrentPath}" d:Text="C:\Program Files\" Grid.Row="1" Grid.Column="1" />
-            </DockPanel>
-            <TextBox Text="{Binding ManifestUrl}" d:Text="https://mods.gsri.team/manifest.json" Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" />
+            <TextBox Text="{Binding ManifestUrl}" d:Text="https://mods.gsri.team/manifest.json" Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" IsReadOnly="True" />
             <TextBox Text="{Binding CustomCliArgs}" d:Text="-test &quot;-another&quot;" Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2" />
         </Grid>
     </StackPanel>

@@ -21,6 +21,9 @@
         <DataTemplate DataType="{x:Type vm:DownloadVM}">
             <v:Download />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:MenuVM}">
+            <v:Menu />
+        </DataTemplate>
         <Style x:Key="Message" TargetType="Label">
             <Setter Property="HorizontalContentAlignment" Value="Center" />
             <Setter Property="Background" Value="DarkOliveGreen" />

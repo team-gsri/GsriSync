@@ -16,7 +16,7 @@
         </DockPanel.Background>
         <views:Title DockPanel.Dock="Top" />
         <views:Branding DockPanel.Dock="Bottom" />
-        <views:Menu DockPanel.Dock="Left" x:Name="menu" />
+        <ContentControl DockPanel.Dock="Left" Content="{Binding Menu}" />
         <ContentControl Content="{Binding CurrentPage}" />
     </DockPanel>
 </Window>

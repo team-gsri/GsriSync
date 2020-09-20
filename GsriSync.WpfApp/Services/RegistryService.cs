@@ -5,47 +5,36 @@ namespace GsriSync.WpfApp.Services
 {
     internal class RegistryService
     {
-        public const string GSRI_PATH = @"Software\GSRI\GsriSync\";
+        public string Arma3Path => ReadLocalMachine32(@"software\bohemia interactive\arma 3", "main");
 
-        public string Arma3Path => Registry.LocalMachine.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Uninstall\Steam App 107410")?.GetValue("InstallLocation")?.ToString();
+        public string SteamPath => ReadLocalMachine32(@"software\valve\steam", "InstallPath");
 
-        public string CurrentPath
+        public string TeamspeakPath => ReadLocalMachine64(@"software\TeamSpeak 3 Client", string.Empty);
+
+        public void CleanupOldKeys()
         {
-            get => this[nameof(CurrentPath)] ?? Environment.ExpandEnvironmentVariables(@"%LOCALAPPDATA%\Gsri\GsriSync");
-            set => this[nameof(CurrentPath)] = value;
-        }
-
-        public string CustomCliArgs
-        {
-            get => this[nameof(CustomCliArgs)] ?? "";
-            set => this[nameof(CustomCliArgs)] = value;
-        }
-
-        public string ManifestUrl
-        {
-            get => this[nameof(ManifestUrl)] ?? @"https://mods.gsri.team/manifest.json";
-            set => this[nameof(ManifestUrl)] = value;
-        }
-
-        public string StartWithConfig
-        {
-            get => this[nameof(StartWithConfig)] ?? "true";
-            set => this[nameof(StartWithConfig)] = value;
-        }
-
-        private RegistryKey Key
-        {
-            get
+            try
             {
-                if (Registry.CurrentUser.OpenSubKey(GSRI_PATH) == null) { Registry.CurrentUser.CreateSubKey(GSRI_PATH); }
-                return Registry.CurrentUser.OpenSubKey(GSRI_PATH, true);
+                RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Registry64)
+                    .DeleteSubKeyTree(@"SOFTWARE\GSRI");
             }
+            catch (Exception) { }
         }
 
-        public string this[string index]
+        public string ReadLocalMachine32(string path, string valueName)
         {
-            get => Key.GetValue(index)?.ToString();
-            set => Key.SetValue(index, value);
+            return RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32)
+                .OpenSubKey(path)
+                ?.GetValue(valueName)
+                ?.ToString();
+        }
+
+        public string ReadLocalMachine64(string path, string valueName)
+        {
+            return RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64)
+                .OpenSubKey(path)
+                ?.GetValue(valueName)
+                ?.ToString();
         }
     }
 }

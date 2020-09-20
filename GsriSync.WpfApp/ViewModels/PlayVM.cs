@@ -8,11 +8,15 @@ namespace GsriSync.WpfApp.ViewModels
 {
     internal class PlayVM : NotifyPropertyChangedBase
     {
-        private readonly ManifestService _manifest = new ManifestService();
+        private readonly ManifestService _manifest;
 
-        private readonly MainWindowsVM _parent;
+        private readonly NavigationService _navigation;
 
-        private readonly SynchronizeService _sync = new SynchronizeService();
+        private readonly RegistryService _registry;
+
+        private readonly SettingsService _settings;
+
+        private readonly NavigationService navigation;
 
         public ICommand LaunchCommand => new DelegateAsyncCommand(LaunchAsync);
 
@@ -20,27 +24,36 @@ namespace GsriSync.WpfApp.ViewModels
 
         public ICommand VocalCommand => new DelegateAsyncCommand(VocalAsync);
 
-        public PlayVM(MainWindowsVM parent)
+        public PlayVM(
+            NavigationService navigation,
+            ManifestService manifest,
+            RegistryService registry,
+            SettingsService settings)
         {
-            _parent = parent;
+            _navigation = navigation ?? throw new ArgumentNullException(nameof(navigation));
+            _manifest = manifest ?? throw new ArgumentNullException(nameof(manifest));
+            _registry = registry ?? throw new ArgumentNullException(nameof(registry));
+            _settings = settings ?? throw new ArgumentNullException(nameof(settings));
         }
 
         private async Task LaunchAsync(object parameter)
         {
-            var manifest = await _manifest.ReadLocalManifestAsync();
-            manifest.Launch();
+            var manifest = await _manifest.LocalManifest;
+            manifest.Server.ConnectGame(
+                _registry.Arma3Path,
+                _settings.CustomCliArgs);
         }
 
         private async Task UninstallAsync(object parameter)
         {
-            await _sync.RemoveAsync();
-            _parent.NavigateToVerify();
+            await _manifest.UninstallAsync();
+            _navigation.NavigateTo(NavigationService.Pages.Verify);
         }
 
         private async Task VocalAsync(object arg)
         {
-            var manifest = await _manifest.ReadLocalManifestAsync();
-            manifest.ConnectVocal();
+            var manifest = await _manifest.LocalManifest;
+            manifest.Server.ConnectVocal();
         }
     }
 }

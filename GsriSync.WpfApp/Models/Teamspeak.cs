@@ -1,7 +1,6 @@
-﻿using GsriSync.WpfApp.Services;
-using System;
-using System.IO;
-using System.Linq;
+﻿using System;
+using System.Threading.Tasks;
+using Windows.Storage;
 
 namespace GsriSync.WpfApp.Models
 {
@@ -9,23 +8,15 @@ namespace GsriSync.WpfApp.Models
     {
         private const string APPDATA = nameof(APPDATA);
 
-        private const string TFAR_PREFIX = "TFAR_";
+        protected override string Archive => "TFAR.zip";
 
-        private readonly RegistryService _registry = new RegistryService();
-
-        public override string LocalExpandPath => $@"{AppData}\TS3Client\plugins";
-
-        protected override string LocalDownloadPath => $@"{_registry.CurrentPath}\.dl";
+        protected override string ExpandPath => $@"{AppData}\TS3Client\plugins";
 
         private string AppData => Environment.GetEnvironmentVariable(APPDATA);
 
-        public override void Delete()
+        protected async override Task<StorageFolder> GetOrMakeExpandFolderAsync(string expandPath)
         {
-            Directory.Delete($@"{LocalExpandPath}\radio-sounds", true);
-            foreach (var file in Directory.GetFiles(LocalExpandPath).Where(filename => filename.StartsWith(TFAR_PREFIX)))
-            {
-                File.Delete(file);
-            }
+            return await StorageFolder.GetFolderFromPathAsync(expandPath);
         }
     }
 }
