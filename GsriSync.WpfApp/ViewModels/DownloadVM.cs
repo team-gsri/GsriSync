@@ -2,7 +2,6 @@
 using GsriSync.WpfApp.Services;
 using GsriSync.WpfApp.Utils;
 using System;
-using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -32,17 +31,16 @@ namespace GsriSync.WpfApp.ViewModels
 
         public async Task InstallAsync()
         {
-            var manifest = await _manifest.RemoteManifest;
-            manifest.InstallProgressChanged += OnDownloadProgress;
-            await manifest.InstallAsync();
-            await _manifest.DownloadRemoteManifestAsync();
+            _manifest.InstallProgressChanged += OnDownloadProgress;
+            await _manifest.InstallAsync();
+            _manifest.InstallProgressChanged -= OnDownloadProgress;
             _navigation.NavigateTo(NavigationService.Pages.Play);
             running = null;
         }
 
         internal void ScheduleDownload()
         {
-            running = running ?? Task.Factory.StartNew(InstallAsync, CancellationToken.None, TaskCreationOptions.None, TaskScheduler.FromCurrentSynchronizationContext());
+            running ??= Task.Factory.StartNew(InstallAsync, CancellationToken.None, TaskCreationOptions.None, TaskScheduler.FromCurrentSynchronizationContext());
         }
 
         private void NotifyPropertiesChanged()

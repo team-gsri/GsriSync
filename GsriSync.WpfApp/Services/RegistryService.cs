@@ -11,6 +11,8 @@ namespace GsriSync.WpfApp.Services
 
         public string TeamspeakPath => ReadLocalMachine64(@"software\TeamSpeak 3 Client", string.Empty);
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Minor Vulnerability", "S2486:Generic exceptions should not be ignored", Justification = "This feature is for backward compatibility")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S108:Nested blocks of code should not be left empty", Justification = "This feature is for backward compatibility")]
         public void CleanupOldKeys()
         {
             try

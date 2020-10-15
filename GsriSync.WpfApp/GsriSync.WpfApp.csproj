@@ -10,6 +10,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Models\Expandable.cs" />
+    <Compile Remove="Models\Teamspeak.cs" />
+    <Compile Remove="Services\ZipClient.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="Views\Icons\analyze.agif" />
     <None Remove="Views\Icons\analyze.gif" />
     <None Remove="Views\Icons\back.png" />
@@ -31,6 +37,7 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.8" />
     <PackageReference Include="Microsoft.Win32.Registry" Version="4.7.0" />
     <PackageReference Include="Microsoft.Windows.SDK.Contracts" Version="10.0.18362.2005" />
+    <PackageReference Include="System.Linq.Async" Version="4.1.1" />
     <PackageReference Include="WpfAnimatedGif" Version="2.0.0" />
   </ItemGroup>
 

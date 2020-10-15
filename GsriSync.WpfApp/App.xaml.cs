@@ -1,4 +1,6 @@
-﻿using GsriSync.WpfApp.Services;
+﻿using GsriSync.WpfApp.Repositories;
+using GsriSync.WpfApp.Services;
+using GsriSync.WpfApp.Services.ManifestProviders;
 using GsriSync.WpfApp.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -43,6 +45,11 @@ namespace GsriSync.WpfApp
             services.AddSingleton<PlayVM>();
             services.AddSingleton<VerifyVM>();
             services.AddSingleton<System.Net.Http.HttpClient>();
+            services.AddSingleton<ManifestRepository>();
+            services.AddSingleton<LocalContentReaderProvider>();
+            services.AddSingleton<LocalFileManifestProvider>();
+            services.AddSingleton<LocalStrategyProvider>();
+            services.AddSingleton<RemoteManifestProvider>();
         }
     }
 }

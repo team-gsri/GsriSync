@@ -33,10 +33,8 @@ namespace GsriSync.WpfApp.ViewModels
             VerifyThirdParty();
             try
             {
-                var local = await _manifest.LocalManifest;
-                var remote = await _manifest.RemoteManifest;
-                var isSync = Equals(local?.LastModification, remote?.LastModification);
-                _navigation.NavigateAfterVerify(isSync);
+                var is_sync = await _manifest.VerifyAsync();
+                _navigation.NavigateAfterVerify(is_sync);
             }
             catch (Exception)
             {
@@ -50,7 +48,7 @@ namespace GsriSync.WpfApp.ViewModels
 
         internal void ScheduleVerify()
         {
-            running = running ?? Task.Factory.StartNew(VerifyAsync, CancellationToken.None, TaskCreationOptions.None, TaskScheduler.FromCurrentSynchronizationContext());
+            running ??= Task.Factory.StartNew(VerifyAsync, CancellationToken.None, TaskCreationOptions.None, TaskScheduler.FromCurrentSynchronizationContext());
         }
 
         private void VerifyThirdParty()

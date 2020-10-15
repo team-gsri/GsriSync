@@ -33,7 +33,7 @@ namespace GsriSync.WpfApp.ViewModels
 
         internal void ScheduleVerify()
         {
-            running = running ?? Task.Factory.StartNew(VerifyIsInstalledAsync, CancellationToken.None, TaskCreationOptions.None, TaskScheduler.FromCurrentSynchronizationContext());
+            running ??= Task.Factory.StartNew(VerifyIsInstalled, CancellationToken.None, TaskCreationOptions.None, TaskScheduler.FromCurrentSynchronizationContext());
         }
 
         private void InstallAction(object obj)
@@ -48,10 +48,9 @@ namespace GsriSync.WpfApp.ViewModels
             NotifyPropertyChanged(nameof(UninstallVisibility));
         }
 
-        private async Task VerifyIsInstalledAsync()
+        private void VerifyIsInstalled()
         {
-            var manifest = await _manifest.LocalManifest;
-            UninstallVisibility = manifest?.IsInstalled ?? false ? Visibility.Visible : Visibility.Hidden;
+            UninstallVisibility = _manifest.IsInstalled ? Visibility.Visible : Visibility.Hidden;
             NotifyPropertyChanged(nameof(UninstallVisibility));
         }
     }

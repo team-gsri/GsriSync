@@ -1,71 +1,62 @@
-﻿using GsriSync.WpfApp.Models;
-using GsriSync.WpfApp.Utils;
+﻿using GsriSync.WpfApp.Events;
+using GsriSync.WpfApp.Models;
+using GsriSync.WpfApp.Repositories;
 using System;
-using System.IO;
-using System.Net;
-using System.Net.Http;
-using System.Text.Json;
 using System.Threading.Tasks;
-using Windows.Storage;
 
 namespace GsriSync.WpfApp.Services
 {
-    internal class ManifestService
+    internal class ManifestService : INotifyInstallProgressChanged
     {
-        private readonly HttpClient _http;
+        private readonly ManifestRepository _repository;
 
-        private readonly SettingsService _settings;
+        private Modpack modpack;
 
-        public AsyncLazy<Manifest> LocalManifest { get; private set; }
+        public bool IsInstalled => modpack?.Local.IsInstalled ?? false;
 
-        public AsyncLazy<Manifest> RemoteManifest { get; }
+        public event InstallProgressChangedEventHandler InstallProgressChanged;
 
         public ManifestService(
-            HttpClient http,
-            SettingsService settings)
+            ManifestRepository repository)
         {
-            _http = http;
-            _settings = settings ?? throw new ArgumentNullException(nameof(settings));
-            LocalManifest = new AsyncLazy<Manifest>(ReadLocalManifestAsync);
-            RemoteManifest = new AsyncLazy<Manifest>(ReadRemoteManifestAsync);
+            _repository = repository;
         }
 
-        public async Task DownloadRemoteManifestAsync()
+        public async Task InstallAsync()
         {
-            using (var client = new WebClient())
-            {
-                var file = await ApplicationData.Current.LocalCacheFolder.CreateFileAsync("manifest.json", CreationCollisionOption.ReplaceExisting);
-                await client.DownloadFileTaskAsync(_settings.ManifestUrl, file.Path);
-            }
-            LocalManifest = new AsyncLazy<Manifest>(ReadLocalManifestAsync);
+            if (modpack == null) { throw new InvalidOperationException("Verify modpack before installing"); }
+
+            modpack.InstallProgressChanged += OnInstallProgress;
+            await modpack.InstallAsync();
+            modpack.InstallProgressChanged -= OnInstallProgress;
         }
 
         public async Task UninstallAsync()
         {
-            var manifest = await LocalManifest;
-            if (!manifest.IsInstalled) { return; }
-            await manifest.UninstallAsync();
-            LocalManifest = new AsyncLazy<Manifest>(ReadLocalManifestAsync);
+            if (modpack == null) { throw new InvalidOperationException("Verify modpack before uninstalling"); }
+
+            await modpack.UninstallAsync();
         }
 
-        private async Task<Manifest> ReadLocalManifestAsync()
+        public async Task<bool> VerifyAsync()
         {
-            try
-            {
-                var file = await ApplicationData.Current.LocalCacheFolder.GetFileAsync("manifest.json");
-                var stream = await file.OpenStreamForReadAsync();
-                return await JsonSerializer.DeserializeAsync<Manifest>(stream);
-            }
-            catch (FileNotFoundException)
-            {
-                return default;
-            }
+            modpack = await _repository.GetModpackAsync();
+            return modpack.Sync;
         }
 
-        private async Task<Manifest> ReadRemoteManifestAsync()
+        internal void Play(string arma3Path, string customCliArgs)
         {
-            var stream = await _http.GetStreamAsync(_settings.ManifestUrl);
-            return await JsonSerializer.DeserializeAsync<Manifest>(stream);
+            modpack.Local.Server.Play(arma3Path, customCliArgs);
+        }
+
+        internal void Talk()
+        {
+            modpack.Local.Server.Talk();
+        }
+
+        private void OnInstallProgress(object sender, InstallProgressChangedEventArgs e)
+        {
+            InstallProgressChanged?.Invoke(this, e);
         }
     }
 }

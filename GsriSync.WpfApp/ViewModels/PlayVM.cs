@@ -16,13 +16,11 @@ namespace GsriSync.WpfApp.ViewModels
 
         private readonly SettingsService _settings;
 
-        private readonly NavigationService navigation;
-
-        public ICommand LaunchCommand => new DelegateAsyncCommand(LaunchAsync);
+        public ICommand LaunchCommand => new DelegateCommand(Launch);
 
         public ICommand UninstallCommand => new DelegateAsyncCommand(UninstallAsync);
 
-        public ICommand VocalCommand => new DelegateAsyncCommand(VocalAsync);
+        public ICommand VocalCommand => new DelegateCommand(Vocal);
 
         public PlayVM(
             NavigationService navigation,
@@ -36,10 +34,9 @@ namespace GsriSync.WpfApp.ViewModels
             _settings = settings ?? throw new ArgumentNullException(nameof(settings));
         }
 
-        private async Task LaunchAsync(object parameter)
+        private void Launch(object parameter)
         {
-            var manifest = await _manifest.LocalManifest;
-            manifest.Server.ConnectGame(
+            _manifest.Play(
                 _registry.Arma3Path,
                 _settings.CustomCliArgs);
         }
@@ -50,10 +47,9 @@ namespace GsriSync.WpfApp.ViewModels
             _navigation.NavigateTo(NavigationService.Pages.Verify);
         }
 
-        private async Task VocalAsync(object arg)
+        private void Vocal(object arg)
         {
-            var manifest = await _manifest.LocalManifest;
-            manifest.Server.ConnectVocal();
+            _manifest.Talk();
         }
     }
 }

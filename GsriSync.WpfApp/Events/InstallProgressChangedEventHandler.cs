@@ -1,4 +1,4 @@
 ﻿namespace GsriSync.WpfApp.Events
 {
-    internal delegate void InstallProgressChangedEventHandler(object sender, InstallProgressChangedEventArgs e);
+    public delegate void InstallProgressChangedEventHandler(object sender, InstallProgressChangedEventArgs e);
 }
