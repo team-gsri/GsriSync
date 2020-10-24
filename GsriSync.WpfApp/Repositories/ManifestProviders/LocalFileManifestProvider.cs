@@ -5,7 +5,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Windows.Storage;
 
-namespace GsriSync.WpfApp.Services.ManifestProviders
+namespace GsriSync.WpfApp.Repositories.ManifestProviders
 {
     internal class LocalFileManifestProvider : IAsyncManifestProvider
     {
@@ -17,7 +17,7 @@ namespace GsriSync.WpfApp.Services.ManifestProviders
                 var stream = await file.OpenStreamForReadAsync();
                 return await JsonSerializer.DeserializeAsync<Manifest>(stream);
             }
-            catch (Exception ex) when (ex is FileNotFoundException || ex is JsonException)
+            catch (Exception ex) when (ex is IOException || ex is JsonException)
             {
                 return null;
             }

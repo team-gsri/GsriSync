@@ -4,19 +4,28 @@ using System.Threading.Tasks;
 
 namespace GsriSync.WpfApp.Utils
 {
-    internal class AsyncLazy<T> : Lazy<Task<T>>
+    internal class AsyncLazy<T>
     {
-        public AsyncLazy(Func<T> valueFactory) :
-            base(() => Task.FromResult(valueFactory()))
-        { }
+        private readonly Func<Task<T>> _valueFactory;
 
-        public AsyncLazy(Func<Task<T>> taskFactory) :
-            base(async () => await taskFactory())
-        { }
+        public bool IsValueCreated { get; private set; } = false;
+
+        public T Value { get; private set; }
+
+        public AsyncLazy(Func<Task<T>> valueFactory)
+        {
+            _valueFactory = valueFactory;
+        }
 
         public TaskAwaiter<T> GetAwaiter()
         {
-            return Value.GetAwaiter();
+            var awaiter = _valueFactory().GetAwaiter();
+            awaiter.OnCompleted(() =>
+            {
+                Value = awaiter.GetResult();
+                IsValueCreated = true;
+            });
+            return awaiter;
         }
     }
 }

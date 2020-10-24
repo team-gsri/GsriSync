@@ -1,9 +1,10 @@
 ﻿using GsriSync.WpfApp.Repositories;
+using GsriSync.WpfApp.Repositories.ManifestProviders;
 using GsriSync.WpfApp.Services;
-using GsriSync.WpfApp.Services.ManifestProviders;
 using GsriSync.WpfApp.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using System;
+using System.Net.Http;
 using System.Windows;
 
 namespace GsriSync.WpfApp
@@ -22,6 +23,24 @@ namespace GsriSync.WpfApp
             _serviceProvider = collection.BuildServiceProvider();
         }
 
+        private static void ConfigureInjectionRepositories(ServiceCollection services)
+        {
+            services.AddSingleton<AddonRepository>();
+            services.AddSingleton<ManifestRepository>();
+            services.AddSingleton<LocalContentReaderProvider>();
+            services.AddSingleton<LocalFileManifestProvider>();
+            services.AddSingleton<LocalStrategyProvider>();
+            services.AddSingleton<RemoteManifestProvider>();
+        }
+
+        private static void ConfigureInjectionServices(ServiceCollection services)
+        {
+            services.AddSingleton<SettingsService>();
+            services.AddSingleton<ManifestService>();
+            services.AddSingleton<RegistryService>();
+            services.AddSingleton<NavigationService>();
+        }
+
         private void Application_Startup(object sender, StartupEventArgs e)
         {
             var mainWindow = _serviceProvider.GetService<MainWindow>();
@@ -29,27 +48,25 @@ namespace GsriSync.WpfApp
             mainWindow.Show();
         }
 
-        private void ConfigureServices(ServiceCollection services)
+        private void ConfigureInjectionViewModels(ServiceCollection services)
         {
-            services.AddSingleton<MainWindow>();
+            //services.AddSingleton<InstallVM>();
             services.AddSingleton<MainWindowsVM>();
             services.AddSingleton<VerifyVM>();
-            services.AddSingleton<SettingsService>();
-            services.AddSingleton<ManifestService>();
-            services.AddSingleton<RegistryService>();
-            services.AddSingleton<NavigationService>();
             services.AddSingleton<ConfigurationVM>();
             services.AddSingleton<DownloadVM>();
-            services.AddSingleton<InstallVM>();
             services.AddSingleton<MenuVM>();
             services.AddSingleton<PlayVM>();
             services.AddSingleton<VerifyVM>();
-            services.AddSingleton<System.Net.Http.HttpClient>();
-            services.AddSingleton<ManifestRepository>();
-            services.AddSingleton<LocalContentReaderProvider>();
-            services.AddSingleton<LocalFileManifestProvider>();
-            services.AddSingleton<LocalStrategyProvider>();
-            services.AddSingleton<RemoteManifestProvider>();
+        }
+
+        private void ConfigureServices(ServiceCollection services)
+        {
+            services.AddSingleton<MainWindow>();
+            services.AddSingleton<HttpClient>();
+            ConfigureInjectionServices(services);
+            ConfigureInjectionRepositories(services);
+            ConfigureInjectionViewModels(services);
         }
     }
 }

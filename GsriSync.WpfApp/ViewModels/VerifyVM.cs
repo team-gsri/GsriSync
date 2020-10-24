@@ -1,8 +1,11 @@
-﻿using GsriSync.WpfApp.Services;
+﻿using GsriSync.WpfApp.Repositories.Errors;
+using GsriSync.WpfApp.Services;
 using GsriSync.WpfApp.Utils;
+using GsriSync.WpfApp.ViewModels.Errors;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using static GsriSync.WpfApp.Events.NavigationChangedEventArgs;
 
 namespace GsriSync.WpfApp.ViewModels
 {
@@ -14,12 +17,12 @@ namespace GsriSync.WpfApp.ViewModels
 
         private readonly RegistryService _registry;
 
-        private Task running;
+        private Task verify;
 
         public string Message { get; set; }
 
         public VerifyVM(
-            NavigationService navigation,
+                    NavigationService navigation,
             ManifestService manifest,
             RegistryService registry)
         {
@@ -30,32 +33,66 @@ namespace GsriSync.WpfApp.ViewModels
 
         public async Task VerifyAsync()
         {
-            VerifyThirdParty();
             try
             {
-                var is_sync = await _manifest.VerifyAsync();
-                _navigation.NavigateAfterVerify(is_sync);
+                _registry.VerifyThirdParties();
+                await _manifest.VerifyAsync();
+                _navigation.NavigateTo(Pages.Play);
             }
-            catch (Exception)
+            catch (RepositoryException<ManifestErrors> ex)
+            when (ex.Error == ManifestErrors.CannotReadLocalCacheDir)
             {
-                _navigation.NavigateAfterVerify(false);
+                SetErrorMessage(ErrorMessages.MSG_CANNOT_IO);
+            }
+            catch (RepositoryException<ManifestErrors> ex)
+            when (ex.Error == ManifestErrors.CannotReadLocalCacheFile)
+            {
+                SetErrorMessage(ErrorMessages.MSG_CANNOT_IO);
+            }
+            catch (RepositoryException<ManifestErrors> ex)
+            when (ex.Error == ManifestErrors.NetworkErrorDownloadingManifest)
+            {
+                SetErrorMessage(ErrorMessages.MSG_CANNOT_DOWNLOAD);
+            }
+            catch (RepositoryException<ManifestErrors> ex)
+            when (ex.Error == ManifestErrors.InvalidRemoteManifest)
+            {
+                SetErrorMessage(ErrorMessages.MSG_CANNOT_PARSE);
+            }
+            catch (RepositoryException<ThirdPartyErrors> ex)
+            when (ex.Error == ThirdPartyErrors.ArmaMissing)
+            {
+                SetErrorMessage(ErrorMessages.MSG_VERIFY_ARMA);
+            }
+            catch (RepositoryException<ThirdPartyErrors> ex)
+            when (ex.Error == ThirdPartyErrors.SteamMissing)
+            {
+                SetErrorMessage(ErrorMessages.MSG_VERIFY_STEAM);
+            }
+            catch (RepositoryException<ThirdPartyErrors> ex)
+            when (ex.Error == ThirdPartyErrors.TeamspeakMissing)
+            {
+                SetErrorMessage(ErrorMessages.MSG_VERIFY_TS);
+            }
+            catch (Exception ex)
+            {
+                SetErrorMessage($"{ErrorMessages.MSG_UNKNOWN} : {ex.Message}");
             }
             finally
             {
-                running = null;
+                verify = null;
             }
         }
 
         internal void ScheduleVerify()
         {
-            running ??= Task.Factory.StartNew(VerifyAsync, CancellationToken.None, TaskCreationOptions.None, TaskScheduler.FromCurrentSynchronizationContext());
+            verify ??= Task.Factory.StartNew(VerifyAsync, CancellationToken.None, TaskCreationOptions.None, TaskScheduler.FromCurrentSynchronizationContext());
         }
 
-        private void VerifyThirdParty()
+        private void SetErrorMessage(string message)
         {
-            if (string.IsNullOrEmpty(_registry.SteamPath)) { Message = "Steam n'est pas installé"; NotifyPropertyChanged(nameof(Message)); throw new InvalidOperationException(); }
-            if (string.IsNullOrEmpty(_registry.Arma3Path)) { Message = "Arma 3 n'est pas installé"; NotifyPropertyChanged(nameof(Message)); throw new InvalidOperationException(); }
-            if (string.IsNullOrEmpty(_registry.TeamspeakPath)) { Message = "Teamspeak n'est pas installé"; NotifyPropertyChanged(nameof(Message)); throw new InvalidOperationException(); }
+            Message = message;
+            NotifyPropertyChanged(nameof(Message));
         }
     }
 }

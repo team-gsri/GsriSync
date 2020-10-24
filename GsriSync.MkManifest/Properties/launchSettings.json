@@ -2,7 +2,7 @@
   "profiles": {
     "GsriSync.MkManifest": {
       "commandName": "Project",
-      "commandLineArgs": "F:\\Mods\\Repack\\Output\\temp https://home.chezsquall.net"
+      "commandLineArgs": "F:\\Mods\\Repack\\Output\\temp https://mods.gsri.team/beta"
     }
   }
 }

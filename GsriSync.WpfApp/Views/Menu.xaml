@@ -51,6 +51,7 @@
                     <Label>Calendar</Label>
                 </StackPanel>
             </Button>
+            <Label>Version 0.1.1</Label>
         </UniformGrid>
     </StackPanel>
 </UserControl>

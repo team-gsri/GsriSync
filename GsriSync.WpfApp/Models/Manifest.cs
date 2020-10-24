@@ -6,7 +6,7 @@ namespace GsriSync.WpfApp.Models
 {
     public class Manifest
     {
-        public IEnumerable<Addon> Addons { get; set; }
+        public ICollection<Addon> Addons { get; set; }
 
         [JsonIgnore]
         public bool IsInstalled => LastModification != default;

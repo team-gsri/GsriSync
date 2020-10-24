@@ -1,9 +1,12 @@
 ﻿using GsriSync.WpfApp.Events;
+using GsriSync.WpfApp.Repositories.Errors;
 using GsriSync.WpfApp.Services;
 using GsriSync.WpfApp.Utils;
+using GsriSync.WpfApp.ViewModels.Errors;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using static GsriSync.WpfApp.Events.NavigationChangedEventArgs;
 
 namespace GsriSync.WpfApp.ViewModels
 {
@@ -13,9 +16,11 @@ namespace GsriSync.WpfApp.ViewModels
 
         private readonly NavigationService _navigation;
 
-        private Task running;
+        private Task download;
 
         public string Filename { get; set; }
+
+        public string Message { get; set; }
 
         public string Operation { get; set; }
 
@@ -27,23 +32,72 @@ namespace GsriSync.WpfApp.ViewModels
         {
             _navigation = navigation ?? throw new ArgumentNullException(nameof(navigation));
             _manifest = manifest ?? throw new ArgumentNullException(nameof(manifest));
+            _manifest.InstallProgressChanged += OnDownloadProgress;
         }
 
         public async Task InstallAsync()
         {
-            _manifest.InstallProgressChanged += OnDownloadProgress;
-            await _manifest.InstallAsync();
-            _manifest.InstallProgressChanged -= OnDownloadProgress;
-            _navigation.NavigateTo(NavigationService.Pages.Play);
-            running = null;
+            try
+            {
+                await _manifest.InstallAsync();
+                _navigation.NavigateTo(Pages.Play);
+            }
+            catch (RepositoryException<ManifestErrors> ex)
+            when (ex.Error == ManifestErrors.CannotReadLocalCacheDir)
+            {
+                SetErrorMessage(ErrorMessages.MSG_CANNOT_IO);
+            }
+            catch (RepositoryException<ManifestErrors> ex)
+            when (ex.Error == ManifestErrors.CannotReadLocalCacheFile)
+            {
+                SetErrorMessage(ErrorMessages.MSG_CANNOT_IO);
+            }
+            catch (RepositoryException<ManifestErrors> ex)
+            when (ex.Error == ManifestErrors.InvalidRemoteManifest)
+            {
+                SetErrorMessage(ErrorMessages.MSG_CANNOT_PARSE);
+            }
+            catch (RepositoryException<ManifestErrors> ex)
+            when (ex.Error == ManifestErrors.NetworkErrorDownloadingManifest)
+            {
+                SetErrorMessage(ErrorMessages.MSG_CANNOT_DOWNLOAD);
+            }
+            catch (RepositoryException<AddonErrors> ex)
+            when (ex.Error == AddonErrors.ErrorDownload)
+            {
+                SetErrorMessage(ErrorMessages.MSG_CANNOT_DOWNLOAD);
+            }
+            catch (RepositoryException<AddonErrors> ex)
+            when (ex.Error == AddonErrors.InvalidFilename)
+            {
+                SetErrorMessage(ErrorMessages.MSG_CANNOT_PARSE);
+            }
+            catch (RepositoryException<AddonErrors> ex)
+            when (ex.Error == AddonErrors.Threading)
+            {
+                SetErrorMessage(ErrorMessages.MSG_THREADING);
+            }
+            catch (RepositoryException<AddonErrors> ex)
+            when (ex.Error == AddonErrors.WritePermissionDenied)
+            {
+                SetErrorMessage(ErrorMessages.MSG_CANNOT_IO);
+            }
+            catch (Exception ex)
+            {
+                SetErrorMessage($"{ErrorMessages.MSG_UNKNOWN} : {ex.Message}");
+            }
+            finally
+            {
+                download = null;
+            }
         }
 
         internal void ScheduleDownload()
         {
-            running ??= Task.Factory.StartNew(InstallAsync, CancellationToken.None, TaskCreationOptions.None, TaskScheduler.FromCurrentSynchronizationContext());
+            download ??= Task.Factory.StartNew(InstallAsync, CancellationToken.None, TaskCreationOptions.None, TaskScheduler.FromCurrentSynchronizationContext());
         }
 
-        private void NotifyPropertiesChanged()
+        private void NotifyDownloadProgress()
         {
             foreach (var name in new[] { nameof(Filename), nameof(Operation), nameof(Progress) })
             {
@@ -56,7 +110,13 @@ namespace GsriSync.WpfApp.ViewModels
             Operation = e.Stage;
             Filename = e.Filename;
             Progress = e.Progress;
-            NotifyPropertiesChanged();
+            NotifyDownloadProgress();
+        }
+
+        private void SetErrorMessage(string message)
+        {
+            Message = message;
+            NotifyPropertyChanged(nameof(Message));
         }
     }
 }

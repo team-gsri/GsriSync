@@ -1,57 +1,119 @@
 ﻿using GsriSync.WpfApp.Events;
 using GsriSync.WpfApp.Models;
 using GsriSync.WpfApp.Repositories;
+using GsriSync.WpfApp.Repositories.Errors;
 using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace GsriSync.WpfApp.Services
 {
     internal class ManifestService : INotifyInstallProgressChanged
     {
-        private readonly ManifestRepository _repository;
+        private readonly AddonRepository _addons;
+
+        private readonly ManifestRepository _manifest;
+
+        private readonly RegistryService _registry;
+
+        private readonly SettingsService _settings;
 
         private Modpack modpack;
 
-        public bool IsInstalled => modpack?.Local.IsInstalled ?? false;
+        public bool IsInstalled => modpack?.Local?.IsInstalled ?? false;
+
+        public bool IsSync => modpack?.IsSync ?? false;
 
         public event InstallProgressChangedEventHandler InstallProgressChanged;
 
         public ManifestService(
-            ManifestRepository repository)
+            RegistryService registry,
+            SettingsService settings,
+            ManifestRepository manifest,
+            AddonRepository addons)
         {
-            _repository = repository;
+            _registry = registry ?? throw new ArgumentNullException(nameof(registry));
+            _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+            _manifest = manifest ?? throw new ArgumentNullException(nameof(manifest));
+            _addons = addons ?? throw new ArgumentNullException(nameof(addons));
+            _addons.InstallProgressChanged += OnInstallProgress;
         }
 
+        /// <summary>
+        ///
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="RepositoryException{ManifestErros}"></exception>
+        /// <exception cref="RepositoryException{AddonErrors}"></exception>
         public async Task InstallAsync()
         {
-            if (modpack == null) { throw new InvalidOperationException("Verify modpack before installing"); }
+            if (modpack == null) { modpack = await GetModpackAsync(); }
 
-            modpack.InstallProgressChanged += OnInstallProgress;
-            await modpack.InstallAsync();
-            modpack.InstallProgressChanged -= OnInstallProgress;
+            foreach (var addon in modpack.GetDeleteAddons())
+            {
+                await _addons.DeleteAsync(addon);
+                await modpack.Delete(addon);
+            }
+
+            foreach (var addon in modpack.GetDownloadAddons())
+            {
+                await _addons.DownloadAsync(addon);
+                await modpack.Download(addon);
+            }
+
+            await _addons.DownloadManifestAsync();
+            modpack.Install();
         }
 
+        public void Play()
+        {
+            var args = $"{modpack.Local.Server.GetArgs()} {_settings.CustomCliArgs}";
+            var exe = $@"{_registry.Arma3Path}\arma3_x64.exe";
+            Process.Start(exe, args);
+        }
+
+        public void Talk()
+        {
+            Process.Start(new ProcessStartInfo(modpack.Local.Server.TeamspeakUrl) { UseShellExecute = true, Verb = "open" });
+        }
+
+        /// <summary>
+        ///
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="RepositoryException{ManifestErros}"></exception>
+        /// <exception cref="RepositoryException{AddonErrors}"></exception>
         public async Task UninstallAsync()
         {
-            if (modpack == null) { throw new InvalidOperationException("Verify modpack before uninstalling"); }
+            if (modpack == null) { modpack = await GetModpackAsync(); }
 
-            await modpack.UninstallAsync();
+            foreach (var addon in modpack.Local.Addons)
+            {
+                await _addons.DeleteAsync(addon);
+            }
+
+            await _addons.DeleteManifestAsync();
+            modpack = null;
         }
 
-        public async Task<bool> VerifyAsync()
+        /// <summary>
+        ///
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="RepositoryException{ManifestErros}"></exception>
+        public async Task VerifyAsync()
         {
-            modpack = await _repository.GetModpackAsync();
-            return modpack.Sync;
+            modpack = await GetModpackAsync();
         }
 
-        internal void Play(string arma3Path, string customCliArgs)
+        /// <summary>
+        ///
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="RepositoryException{ManifestErrors}"></exception>
+        private async Task<Modpack> GetModpackAsync()
         {
-            modpack.Local.Server.Play(arma3Path, customCliArgs);
-        }
-
-        internal void Talk()
-        {
-            modpack.Local.Server.Talk();
+            return await _manifest.GetModpackAsync();
         }
 
         private void OnInstallProgress(object sender, InstallProgressChangedEventArgs e)

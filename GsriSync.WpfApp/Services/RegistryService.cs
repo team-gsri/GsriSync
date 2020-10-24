@@ -1,4 +1,5 @@
-﻿using Microsoft.Win32;
+﻿using GsriSync.WpfApp.Repositories.Errors;
+using Microsoft.Win32;
 using System;
 
 namespace GsriSync.WpfApp.Services
@@ -37,6 +38,22 @@ namespace GsriSync.WpfApp.Services
                 .OpenSubKey(path)
                 ?.GetValue(valueName)
                 ?.ToString();
+        }
+
+        public void VerifyThirdParties()
+        {
+            if (string.IsNullOrEmpty(SteamPath))
+            {
+                throw new RepositoryException<ThirdPartyErrors>(ThirdPartyErrors.SteamMissing);
+            }
+            if (string.IsNullOrEmpty(Arma3Path))
+            {
+                throw new RepositoryException<ThirdPartyErrors>(ThirdPartyErrors.ArmaMissing);
+            }
+            if (string.IsNullOrEmpty(TeamspeakPath))
+            {
+                throw new RepositoryException<ThirdPartyErrors>(ThirdPartyErrors.TeamspeakMissing);
+            }
         }
     }
 }

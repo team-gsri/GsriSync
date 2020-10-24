@@ -1,75 +1,64 @@
-﻿using GsriSync.WpfApp.Events;
-using GsriSync.WpfApp.Models.Comparers;
-using GsriSync.WpfApp.Services.ManifestProviders;
+﻿using GsriSync.WpfApp.Models.Comparers;
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
-using System.Net;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Windows.Storage;
 
 namespace GsriSync.WpfApp.Models
 {
-    internal class Modpack : INotifyInstallProgressChanged
+    internal class Modpack
     {
-        private readonly string _manifest;
+        private const string MANIFEST_FILE = "manifest.json";
+
+        public bool IsSync => new ManifestComparer().Equals(Local, Remote);
 
         public Manifest Local { get; private set; }
 
         public Manifest Remote { get; private set; }
 
-        public bool Sync { get; private set; }
-
-        public event InstallProgressChangedEventHandler InstallProgressChanged;
-
-        public Modpack(Manifest local, Manifest remote, string manifest)
+        public Modpack(Manifest local, Manifest remote)
         {
-            _manifest = manifest;
             Local = local;
             Remote = remote;
-            Sync = new ManifestComparer().Equals(local, remote);
         }
 
-        public async Task InstallAsync()
+        public async Task Delete(Addon addon)
         {
-            if (Sync) { return; }
+            Local.Addons.Remove(addon);
+            await UpdateManifest();
+        }
 
-            foreach (var addon in Local.Addons.Except(Remote.Addons, new AddonNameComparer()))
-            {
-                await addon.DeleteAsync();
-            }
+        public async Task Download(Addon remote)
+        {
+            var comparer = new AddonNameComparer();
+            var local = Local.Addons.FirstOrDefault(addon => comparer.Equals(addon, remote));
+            Local.Addons.Remove(local);
+            Local.Addons.Add(remote);
+            await UpdateManifest();
+        }
 
-            foreach (var addon in Remote.Addons.Except(Local.Addons, new AddonHashComparer()))
-            {
-                addon.InstallProgressChanged += OnAddonInstallProgress;
-                await addon.DownloadAsync();
-                addon.InstallProgressChanged -= OnAddonInstallProgress;
-            }
+        public IEnumerable<Addon> GetDeleteAddons()
+        {
+            return Local.Addons.Except(Remote.Addons, new AddonNameComparer());
+        }
 
-            await DownloadManifestAsync();
+        public IEnumerable<Addon> GetDownloadAddons()
+        {
+            return Remote.Addons.Except(Local.Addons, new AddonHashComparer());
+        }
+
+        public void Install()
+        {
             Local = Remote;
-            Sync = true;
         }
 
-        public async Task UninstallAsync()
+        private async Task UpdateManifest()
         {
-            foreach (var addon in Local.Addons)
-            {
-                await addon.DeleteAsync();
-            }
-            Local = await new LocalContentReaderProvider().ProvideManifestAsync();
-            Sync = false;
-        }
-
-        private async Task DownloadManifestAsync()
-        {
-            var manifest = await ApplicationData.Current.LocalCacheFolder.CreateFileAsync("manifest.json", CreationCollisionOption.ReplaceExisting);
-            using var client = new WebClient();
-            client.DownloadFile(_manifest, manifest.Path);
-        }
-
-        private void OnAddonInstallProgress(object sender, InstallProgressChangedEventArgs e)
-        {
-            InstallProgressChanged?.Invoke(this, e);
+            var file = await ApplicationData.Current.LocalCacheFolder.CreateFileAsync(MANIFEST_FILE, CreationCollisionOption.ReplaceExisting);
+            await FileIO.WriteTextAsync(file, JsonSerializer.Serialize(Local));
         }
     }
 }

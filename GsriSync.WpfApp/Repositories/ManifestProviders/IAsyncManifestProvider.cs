@@ -1,7 +1,7 @@
 ﻿using GsriSync.WpfApp.Models;
 using System.Threading.Tasks;
 
-namespace GsriSync.WpfApp.Services.ManifestProviders
+namespace GsriSync.WpfApp.Repositories.ManifestProviders
 {
     internal interface IAsyncManifestProvider
     {

@@ -5,8 +5,8 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d"
              d:DesignHeight="450" d:DesignWidth="800">
-    <UniformGrid Columns="3">
-        <Button Margin="20" Command="{Binding UninstallCommand}" Style="{StaticResource Square}">
+    <UniformGrid Columns="4">
+        <Button Margin="20" Command="{Binding UninstallCommand}" Style="{StaticResource Square}" Visibility="{Binding UninstallCommandVisibility}">
             <Button.Background>
                 <SolidColorBrush Color="Coral" Opacity=".7" />
             </Button.Background>
@@ -15,16 +15,22 @@
                 <Label HorizontalAlignment="Center">Désinstaller le modpack</Label>
             </StackPanel>
         </Button>
-        <Button Margin="20" Command="{Binding VocalCommand}" Style="{StaticResource Square}">
+        <Button Margin="20" Command="{Binding VocalCommand}" Style="{StaticResource Square}" Visibility="{Binding VocalCommandVisibility}">
             <StackPanel>
                 <Image Source="Icons/mic.png" Width="75" />
                 <Label HorizontalAlignment="Center">Connexion vocale</Label>
             </StackPanel>
         </Button>
-        <Button Margin="20" Command="{Binding LaunchCommand}" Style="{StaticResource Square}">
+        <Button Margin="20" Command="{Binding PlayCommand}" Style="{StaticResource Square}" Visibility="{Binding PlayCommandVisibility}">
             <StackPanel>
                 <Image Source="Icons/play.png" Width="75" />
                 <Label HorizontalAlignment="Center">Lancer le jeu</Label>
+            </StackPanel>
+        </Button>
+        <Button Margin="20" Command="{Binding InstallCommand}" Style="{StaticResource Square}" Visibility="{Binding InstallCommandVisibility}">
+            <StackPanel>
+                <Image Source="Icons/download.png" Width="75" />
+                <Label HorizontalAlignment="Center">Mettre à jour le modpack</Label>
             </StackPanel>
         </Button>
     </UniformGrid>

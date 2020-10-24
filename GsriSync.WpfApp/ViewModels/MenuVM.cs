@@ -1,6 +1,7 @@
 ﻿using GsriSync.WpfApp.Services;
 using GsriSync.WpfApp.Utils;
 using System.Windows.Input;
+using static GsriSync.WpfApp.Events.NavigationChangedEventArgs;
 
 namespace GsriSync.WpfApp.ViewModels
 {
@@ -17,7 +18,7 @@ namespace GsriSync.WpfApp.ViewModels
 
         private void NavigateAction(object parameter)
         {
-            _navigation.NavigateTo(NavigationService.Pages.Config);
+            _navigation.NavigateTo(Pages.Config);
         }
     }
 }

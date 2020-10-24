@@ -13,6 +13,8 @@
     <Compile Remove="Models\Expandable.cs" />
     <Compile Remove="Models\Teamspeak.cs" />
     <Compile Remove="Services\ZipClient.cs" />
+    <Compile Remove="ViewModels\InstallVM.cs" />
+    <Compile Remove="Views\Install.xaml.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -30,6 +32,10 @@
     <None Remove="Views\Icons\wrench.png" />
     <None Remove="Views\Images\logo.png" />
     <None Remove="Views\Images\wallpaper.jpg" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Page Remove="Views\Install.xaml" />
   </ItemGroup>
 
   <ItemGroup>

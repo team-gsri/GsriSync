@@ -1,6 +1,10 @@
 ﻿using GsriSync.WpfApp.Models;
-using GsriSync.WpfApp.Services;
-using GsriSync.WpfApp.Services.ManifestProviders;
+using GsriSync.WpfApp.Repositories.Errors;
+using GsriSync.WpfApp.Repositories.ManifestProviders;
+using System;
+using System.IO;
+using System.Net.Http;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace GsriSync.WpfApp.Repositories
@@ -11,23 +15,43 @@ namespace GsriSync.WpfApp.Repositories
 
         private readonly RemoteManifestProvider _remote;
 
-        private readonly SettingsService _settings;
-
         public ManifestRepository(
-            SettingsService settings,
             LocalStrategyProvider local,
             RemoteManifestProvider remote)
         {
             _local = local;
             _remote = remote;
-            _settings = settings;
         }
 
+        /// <summary>
+        ///
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="RepositoryException{ManifestErros}"></exception>
         public async Task<Modpack> GetModpackAsync()
         {
-            var local = await _local.ProvideManifestAsync();
-            var remote = await _remote.ProvideManifestAsync();
-            return new Modpack(local, remote, _settings.ManifestUrl);
+            try
+            {
+                var local = await _local.ProvideManifestAsync();
+                var remote = await _remote.ProvideManifestAsync();
+                return new Modpack(local, remote);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                throw new RepositoryException<ManifestErrors>(ManifestErrors.CannotReadLocalCacheDir);
+            }
+            catch (IOException)
+            {
+                throw new RepositoryException<ManifestErrors>(ManifestErrors.CannotReadLocalCacheFile);
+            }
+            catch (HttpRequestException)
+            {
+                throw new RepositoryException<ManifestErrors>(ManifestErrors.NetworkErrorDownloadingManifest);
+            }
+            catch (JsonException)
+            {
+                throw new RepositoryException<ManifestErrors>(ManifestErrors.InvalidRemoteManifest);
+            }
         }
     }
 }

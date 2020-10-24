@@ -1,4 +1,5 @@
-﻿using System.Windows.Controls;
+﻿using GsriSync.WpfApp.ViewModels;
+using System.Windows.Controls;
 
 namespace GsriSync.WpfApp.Views
 {
@@ -10,6 +11,12 @@ namespace GsriSync.WpfApp.Views
         public Play()
         {
             InitializeComponent();
+            LayoutUpdated += OnLayoutUpdated;
+        }
+
+        private void OnLayoutUpdated(object sender, System.EventArgs e)
+        {
+            (DataContext as PlayVM)?.RefreshCommandVisibility();
         }
     }
 }

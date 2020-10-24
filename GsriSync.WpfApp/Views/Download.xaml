@@ -12,7 +12,8 @@
         <StackPanel Orientation="Vertical" VerticalAlignment="Center" Margin="20">
             <Label Content="{Binding Operation}" d:Content="Downloading ..." />
             <Label Content="{Binding Filename}" d:Content="@GSRI.zip" />
-            <ProgressBar Value="{Binding Progress}" d:Value="55" />
+            <ProgressBar Value="{Binding Progress}" d:Value="55" d:IsIndeterminate="True" />
+            <TextBlock Text="{Binding Message}" Foreground="Red" d:Text="Steam est kaput" HorizontalAlignment="Center" FontSize="18pt" TextWrapping="WrapWithOverflow" />
         </StackPanel>
     </DockPanel>
 </UserControl>

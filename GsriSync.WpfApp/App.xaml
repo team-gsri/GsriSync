@@ -12,9 +12,9 @@
         <DataTemplate DataType="{x:Type vm:VerifyVM}">
             <v:Verify />
         </DataTemplate>
-        <DataTemplate DataType="{x:Type vm:InstallVM}">
+        <!--<DataTemplate DataType="{x:Type vm:InstallVM}">
             <v:Install />
-        </DataTemplate>
+        </DataTemplate>-->
         <DataTemplate DataType="{x:Type vm:PlayVM}">
             <v:Play />
         </DataTemplate>
