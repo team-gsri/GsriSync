@@ -9,7 +9,7 @@
   <Identity
     Name="5613ArwynFr.GsriSync"
     Publisher="CN=4D007A5B-9926-4E7C-8F1F-E3BA5EA17DE2"
-    Version="0.1.0.0" />
+    Version="0.1.2.0" />
 
   <Properties>
     <DisplayName>GsriSync</DisplayName>
