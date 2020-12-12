@@ -6,11 +6,16 @@ namespace GsriSync.WpfApp.Services
 {
     internal class RegistryService
     {
-        public string Arma3Path => ReadLocalMachine32(@"software\bohemia interactive\arma 3", "main");
+        private const string TEAMSPEAK_PATH = @"software\TeamSpeak 3 Client";
 
-        public string SteamPath => ReadLocalMachine32(@"software\valve\steam", "InstallPath");
+        public string Arma3Path => ReadRegistry(RegistryHive.LocalMachine, RegistryView.Registry32, @"software\bohemia interactive\arma 3", "main");
 
-        public string TeamspeakPath => ReadLocalMachine64(@"software\TeamSpeak 3 Client", string.Empty);
+        public string SteamPath => ReadRegistry(RegistryHive.LocalMachine, RegistryView.Registry32, @"software\valve\steam", "InstallPath");
+
+        public string TeamspeakPath => ReadRegistry(RegistryHive.LocalMachine, RegistryView.Registry64, TEAMSPEAK_PATH, string.Empty)
+            ?? ReadRegistry(RegistryHive.LocalMachine, RegistryView.Registry32, TEAMSPEAK_PATH, string.Empty)
+            ?? ReadRegistry(RegistryHive.CurrentUser, RegistryView.Registry64, TEAMSPEAK_PATH, string.Empty)
+            ?? ReadRegistry(RegistryHive.CurrentUser, RegistryView.Registry32, TEAMSPEAK_PATH, string.Empty);
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Minor Vulnerability", "S2486:Generic exceptions should not be ignored", Justification = "This feature is for backward compatibility")]
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S108:Nested blocks of code should not be left empty", Justification = "This feature is for backward compatibility")]
@@ -22,22 +27,6 @@ namespace GsriSync.WpfApp.Services
                     .DeleteSubKeyTree(@"SOFTWARE\GSRI");
             }
             catch (Exception) { }
-        }
-
-        public string ReadLocalMachine32(string path, string valueName)
-        {
-            return RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32)
-                .OpenSubKey(path)
-                ?.GetValue(valueName)
-                ?.ToString();
-        }
-
-        public string ReadLocalMachine64(string path, string valueName)
-        {
-            return RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64)
-                .OpenSubKey(path)
-                ?.GetValue(valueName)
-                ?.ToString();
         }
 
         public void VerifyThirdParties()
@@ -54,6 +43,11 @@ namespace GsriSync.WpfApp.Services
             {
                 throw new RepositoryException<ThirdPartyErrors>(ThirdPartyErrors.TeamspeakMissing);
             }
+        }
+
+        private string ReadRegistry(RegistryHive hive, RegistryView view, string path, string value)
+        {
+            return RegistryKey.OpenBaseKey(hive, view).OpenSubKey(path)?.GetValue(value)?.ToString();
         }
     }
 }
